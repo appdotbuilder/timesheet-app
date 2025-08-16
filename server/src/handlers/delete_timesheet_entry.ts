@@ -1,11 +1,25 @@
+import { db } from '../db';
+import { timesheetEntriesTable } from '../db/schema';
 import { type DeleteTimesheetEntryInput } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export async function deleteTimesheetEntry(input: DeleteTimesheetEntryInput): Promise<{ success: boolean }> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is to delete a timesheet entry (clicking 'Hapus' button).
-    // It should remove the entry from the database permanently.
-    // Return success status to confirm deletion.
-    return Promise.resolve({
-        success: true
-    });
+  try {
+    // Delete the timesheet entry by ID
+    const result = await db.delete(timesheetEntriesTable)
+      .where(eq(timesheetEntriesTable.id, input.id))
+      .returning({ id: timesheetEntriesTable.id })
+      .execute();
+
+    // Check if any rows were deleted
+    if (result.length === 0) {
+      // Entry not found - still return success to be idempotent
+      return { success: true };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Delete timesheet entry failed:', error);
+    throw error;
+  }
 }

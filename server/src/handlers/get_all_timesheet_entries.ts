@@ -1,9 +1,21 @@
+import { db } from '../db';
+import { timesheetEntriesTable } from '../db/schema';
+import { desc } from 'drizzle-orm';
 import { type TimesheetEntry } from '../schema';
 
-export async function getAllTimesheetEntries(): Promise<TimesheetEntry[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is to fetch all timesheet entries across all employees.
-    // Results should be ordered by start_time in descending order (newest first).
-    // This can be used for administrative purposes or general listing.
-    return Promise.resolve([]);
-}
+export const getAllTimesheetEntries = async (): Promise<TimesheetEntry[]> => {
+  try {
+    // Fetch all timesheet entries ordered by start_time descending (newest first)
+    const results = await db
+      .select()
+      .from(timesheetEntriesTable)
+      .orderBy(desc(timesheetEntriesTable.start_time))
+      .execute();
+
+    // Return results - no numeric conversions needed for timesheet entries
+    return results;
+  } catch (error) {
+    console.error('Failed to fetch all timesheet entries:', error);
+    throw error;
+  }
+};

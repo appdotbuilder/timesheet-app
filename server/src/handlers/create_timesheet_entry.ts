@@ -1,20 +1,26 @@
+import { db } from '../db';
+import { timesheetEntriesTable } from '../db/schema';
 import { type CreateTimesheetEntryInput, type TimesheetEntry } from '../schema';
 
-export async function createTimesheetEntry(input: CreateTimesheetEntryInput): Promise<TimesheetEntry> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is to start a new timesheet entry (clicking 'Mulai' button).
-    // It should record the current timestamp as start_time and create a new entry in the database.
-    // The entry will not have an end_time initially (nullable field).
-    return Promise.resolve({
-        id: 0, // Placeholder ID
+export const createTimesheetEntry = async (input: CreateTimesheetEntryInput): Promise<TimesheetEntry> => {
+  try {
+    // Insert new timesheet entry record with current timestamp as start_time
+    const result = await db.insert(timesheetEntriesTable)
+      .values({
         employee_name: input.employee_name,
         start_time: new Date(), // Current timestamp when 'Mulai' is clicked
-        end_time: null, // No end time initially
+        end_time: null, // No end time initially - entry is still in progress
         category: input.category,
         ticket_number: input.ticket_number || null,
-        line_items: input.line_items || 0,
+        line_items: input.line_items, // Default value handled by Zod schema
         duration_minutes: null, // Will be calculated when entry is stopped
-        created_at: new Date(),
-        updated_at: new Date()
-    } as TimesheetEntry);
-}
+      })
+      .returning()
+      .execute();
+
+    return result[0];
+  } catch (error) {
+    console.error('Timesheet entry creation failed:', error);
+    throw error;
+  }
+};
